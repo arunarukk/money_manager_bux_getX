@@ -16,12 +16,12 @@ class IncomeCategoryList extends StatelessWidget {
             final category = newList[index];
 
             return Card(
-              shadowColor: Colors.green,
+              //shadowColor: Colors.green,
               //borderOnForeground: true,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
               ),
-              elevation: 30,
+              elevation: 1,
               child: SizedBox(
                 height: 80,
                 child: Center(
@@ -43,7 +43,7 @@ class IncomeCategoryList extends StatelessWidget {
           },
           separatorBuilder: (ctx, index) {
             return const SizedBox(
-              height: 10,
+              height: 5,
             );
           },
           itemCount: newList.length,

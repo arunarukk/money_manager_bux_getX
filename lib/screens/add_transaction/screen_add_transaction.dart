@@ -161,26 +161,7 @@ class _ScreenAddTransactionState extends State<ScreenAddTransaction> {
                         },
                       );
                     }).toList(),
-                    //  const [
-                    //   DropdownMenuItem(
-                    //     child: Text('Category 1'),
-                    //     value: 1,
-                    //   ),
-                    //   DropdownMenuItem(
-                    //     child: Text('Category 2'),
-                    //     value: 2,
-                    //   ),
-                    //   DropdownMenuItem(
-                    //     child: Text('Category 3'),
-                    //     value: 3,
-                    //   ),
-                    //   DropdownMenuItem(
-                    //     child: Text('Category 4'),
-                    //     value: 4,
-                    //   ),
-                    // ],
                     onChanged: (selectedValue) {
-                      print(selectedValue);
                       setState(() {
                         _categoryID = selectedValue;
                       });

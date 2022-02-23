@@ -4,8 +4,11 @@ import 'package:money_manager/db/category/category_db.dart';
 import 'package:money_manager/db/transaction/transaction_db.dart';
 import 'package:money_manager/models/category/category_model.dart';
 import 'package:money_manager/models/transaction/transaction_model.dart';
+import 'package:money_manager/screens/home/screen_home.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 class ScreenTransaction extends StatefulWidget {
   ScreenTransaction({Key? key}) : super(key: key);
@@ -20,11 +23,57 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
   ScrollController scrollController = ScrollController();
 
   bool closeTopContainer = false;
-  String _selectedStartDate = 'From';
-  String _selectedEndDate = 'Until';
-  bool dateRangePerformed = false;
+  // DateTimeRange? dateRange;
 
-  DateTimeRange? dateRange;
+  late TooltipBehavior _tooltipBehavior;
+
+  String? _selectedStartDate;
+  String? _selectedEndDate;
+
+  String? _shrdStartDate;
+  String? _shrdEndDate;
+
+  // Future pickDateRange(BuildContext context) async {
+  //   final initialDateRange = DateTimeRange(
+  //     start: DateTime.now(),
+  //     end: DateTime.now().add(Duration(hours: 24 * 3)),
+  //   );
+  //   final newDateRange = await showDateRangePicker(
+  //     context: context,
+  //     firstDate: DateTime(DateTime.now().year - 5),
+  //     lastDate: DateTime(DateTime.now().year + 5),
+  //     initialDateRange: dateRange ?? initialDateRange,
+  //   );
+
+  //   if (newDateRange == null) return;
+  //   //print(newDateRange.start);
+  //   dateRange = newDateRange;
+  //   _selectedStartDate = DateFormat('dd/MM/yyyy').format(dateRange!.start);
+  //   _selectedEndDate = DateFormat('dd/MM/yyyy').format(dateRange!.end);
+
+  //   //print(dateRange);
+  //   if (dateRange != null) {
+  //     getShrdDate();
+  //   }
+  // }
+
+  // getShrdDate() async {
+  //   final _sharedPrefs = await SharedPreferences.getInstance();
+
+  //   final endDate = _sharedPrefs.setString('end', _selectedEndDate!);
+  //   final startDate = _sharedPrefs.setString('start', _selectedStartDate!);
+
+  //   print('end${_selectedEndDate}');
+  //   print(endDate.toString());
+
+  //   // _selectedStartDate = DateFormat('dd/MM/yyyy').format(dateRange!.start);
+  //   // _selectedEndDate = DateFormat('dd/MM/yyyy').format(dateRange!.end);
+  //   _shrdEndDate = _sharedPrefs.get('end') as String?;
+  //   _shrdStartDate = _sharedPrefs.get('start') as String?;
+  //   print('set ${_shrdEndDate}');
+  // }
+
+  //bool dateRangePerformed = false;
 
   // String getFrom() {
   //   if (dateRange == null) {
@@ -53,22 +102,23 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
 
   /* .............pieChart list to map.............. */
 
-  Future pieData() async {
-    List<TransactionModel> data =
-        await TransactionDB.instance.getAllTransactions();
+  // Future pieData() async {
+  //   List<TransactionModel> data =
+  //       await TransactionDB.instance.getAllTransactions();
 
-    final Map<String, double> result = Map.fromIterable(data,
-        key: (v) => v.category.name, value: (v) => v.amount);
-    //_dataMap = result;
+  //   final Map<String, double> result = Map.fromIterable(data,
+  //       key: (v) => v.category.name, value: (v) => v.amount);
+  //   //_dataMap = result;
 
-    if (result.isEmpty) {
-      return;
-    }
-    setState(() {
-      _dataMap = result;
-    });
-    print('pieData');
-  }
+  //   if (result.isEmpty) {
+  //     return;
+  //   }
+  //   print(data.toList());
+  //   setState(() {
+  //     _dataMap = result;
+  //   });
+  //   print('pieData');
+  // }
 
 /* .............Total of Income and Expense.............. */
   // getTotalAmount() async {
@@ -99,9 +149,10 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
   @override
   void initState() {
     // TODO: implement initState
-    //TransactionDB.instance.refresh();
+    TransactionDB.instance.refresh();
+    _tooltipBehavior = TooltipBehavior(enable: true);
     super.initState();
-    pieData();
+    // pieData();
 
     //getTotalAmount();
     //TransactionDB.instance.filterRange(dateRange!.start, getUntil());
@@ -117,173 +168,15 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
   Widget build(BuildContext context) {
     TransactionDB.instance.refresh();
     CategoryDB.instance.refreshUI();
+    TransactionDB.instance.pieData();
     // pieData();
     // getTotalAmount();
     final Size size = MediaQuery.of(context).size;
-    final double chartHeight = size.height * 0.30;
+    final double chartHeight = size.height * 0.27;
     return Column(
       children: [
-        Padding(
-          padding:
-              const EdgeInsets.only(right: 30, left: 30, top: 8, bottom: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                'Set Range',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              // SizedBox(
-              //   width: 150,
-              //   child: TextFormField(
-              //     textAlign: TextAlign.center,
-              //     decoration: const InputDecoration(
-              //       border: InputBorder.none,
-              //       focusedBorder: InputBorder.none,
-              //       enabledBorder: InputBorder.none,
-              //       errorBorder: InputBorder.none,
-              //       disabledBorder: InputBorder.none,
-              //       contentPadding:
-              //           EdgeInsets.only(left: 15, bottom: 11, top: 11, right: 15),
-              //     ),
-              //     readOnly: true,
-              //     keyboardType: TextInputType.none,
-              //     controller: _dateController,
-              //     onTap: () async {
-              //       // await showDatePicker(
-              //       //   context: context,
-              //       //   initialDate: DateTime.now(),
-              //       //   firstDate: DateTime(2015),
-              //       //   lastDate: DateTime.now(),
-              //       // ).then((selectedDate) {
-              //       //   if (selectedDate != null) {
-              //       //     _dateController.text =
-              //       //         DateFormat('MMM dd, yyyy').format(selectedDate);
-              //       //     for (int i = 0; i < listDate.length; i++) {
-              //       //       if (listDate[i] == _dateController.text) {
-              //       //         flag = 1;
-              //       //         break;
-              //       //       } else {
-              //       //         flag = 0;
-              //       //       }
-              //       //     }
-              //       //     setState(() {});
-              //       //   }
-              //       // });
-              //      // pickDateRange(context);
-              //     },
-              //     style: const TextStyle(fontSize: 15, color: Colors.black),
-              //     validator: (String? value) {
-              //       if (value!.isEmpty) {
-              //         return 'Date is Required';
-              //       }
-              //       return null;
-              //     },
-              //     onSaved: (String? value) {},
-              //   ),
-              // ),
-              Row(
-                children: [
-                  ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        // shape: RoundedRectangleBorder(
-                        //   borderRadius: BorderRadius.all(Radius.circular(10)),
-                        // ),
-                        elevation: 0,
-                        primary: Colors.grey[100],
-                        // shadowColor: Colors.cyan,
-                      ),
-                      onPressed: () {
-                        pickDateRange(context);
-                        // TransactionDB.instance.filterRange(
-                        //     (dateRange!.start).toString(),
-                        //     (dateRange!.end).toString());
-                        // filterange();
-                        // setState(() {
-                        //   _selectedStartDate = getFrom();
-                        //   _selectedEndDate = getUntil();
-                        // });
-                      },
-                      child: Text(
-                        _selectedStartDate,
-                        style: TextStyle(color: Colors.grey.shade600),
-                      )),
-                  // Expanded(
-                  //   child: TextFormField(
-                  //     // controller: _startController,
-                  //     decoration: InputDecoration(
-                  //         hintText: getFrom(),
-                  //         border: OutlineInputBorder(
-                  //           borderRadius: BorderRadius.circular(30),
-                  //         )),
-                  //     // initialValue: getFrom(),
-                  //     onTap: () => pickDateRange(context),
-                  //   ),
-                  // ),
-                  const SizedBox(width: 5),
-                  const Icon(
-                    Icons.arrow_forward,
-                    color: Colors.black,
-                    size: 15,
-                  ),
-                  const SizedBox(width: 5),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      elevation: 0,
-                      //shadowColor: Colors.purple,
-                      primary: Colors.grey[100],
-                      // padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      //textStyle:
-                      // TextStyle(fontSize: 30, fontWeight: FontWeight.bold)
-                    ),
-                    onPressed: () {
-                      pickDateRange(context);
-                      // setState(() {
-                      //   _selectedStartDate = getFrom();
-                      //   _selectedEndDate = getUntil();
-                      // });
-                    },
-                    child: Text(
-                      _selectedEndDate,
-                      style: TextStyle(color: Colors.grey.shade600),
-                    ),
-                  ),
-                ],
-              ),
-              // Expanded(
-              //   child: TextFormField(
-              //     //controller: _endController,
-              //     decoration: InputDecoration(
-              //         hintText: getUntil(),
-              //         border: OutlineInputBorder(
-              //           borderRadius: BorderRadius.circular(30),
-              //         )),
-              //     // initialValue: getUntil(),
-              //     onTap: () => pickDateRange(context),
-              //   ),
-              // ),
-            ],
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (dateRange != null) {
-              setState(() {
-                dateRangePerformed = true;
-              });
-              TransactionDB.instance
-                  .filterAllTransaction(dateRange?.start, dateRange?.end);
-            }
-            print(dateRangePerformed);
-          },
-          child: Text('Search'),
-        ),
         const SizedBox(
-          height: 5,
+          height: 20,
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -330,7 +223,7 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                                 (BuildContext ctx, totalIncome, Widget? _) {
                               if (totalIncome == null)
                                 return Container(
-                                  child: Text(
+                                  child: const Text(
                                     '₹ 0',
                                     style: TextStyle(
                                       fontSize: 18,
@@ -342,13 +235,13 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                                 );
                               return SingleChildScrollView(
                                 child: totalIncome == null
-                                    ? Text('₹ 0')
+                                    ? const Text('₹ 0')
                                     : Text(
                                         '₹ ${(totalIncome).toString()}',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFFffffff),
+                                          color: const Color(0xFFffffff),
                                           letterSpacing: 1,
                                         ),
                                       ),
@@ -356,10 +249,10 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                             },
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 10,
                         ),
-                        Text(
+                        const Text(
                           'Total Income',
                           style: TextStyle(
                             //color: app_color.textWhite,
@@ -416,24 +309,23 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                         // ),
                         ValueListenableBuilder(
                           valueListenable: TransactionDB
-                              .instance.totalAllTransactionListNotifier,
-                          builder: (BuildContext ctx, List<double> newList,
-                              Widget? _) {
-                            if (newList.isEmpty)
-                              return Text(
-                                '₹ 0',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFffffff),
-                                  letterSpacing: 1,
-                                ),
-                              );
-                            return newList == null
-                                ? Text('₹ 0')
+                              .instance.expenseTransactionListNotifier,
+                          builder: (BuildContext ctx, expense, Widget? _) {
+                            //if (expense==null)
+                            // return Text(
+                            //   '₹ 0',
+                            //   style: TextStyle(
+                            //     fontSize: 18,
+                            //     fontWeight: FontWeight.bold,
+                            //     color: Color(0xFFffffff),
+                            //     letterSpacing: 1,
+                            //   ),
+                            // );
+                            return expense == null
+                                ? const Text('₹ 0')
                                 : Text(
-                                    '₹ ${(newList.last).toString()}',
-                                    style: TextStyle(
+                                    '₹ ${(expense).toString()}',
+                                    style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFFffffff),
@@ -443,10 +335,10 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                           },
                         ),
 
-                        SizedBox(
+                        const SizedBox(
                           height: 10,
                         ),
-                        Text(
+                        const Text(
                           'Total Expense',
                           style: TextStyle(
                             //color: app_color.textWhite,
@@ -465,7 +357,7 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
           ],
         ),
         const SizedBox(
-          height: 30,
+          height: 20,
         ),
         AnimatedContainer(
           duration: const Duration(milliseconds: 1000),
@@ -476,70 +368,76 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
             fit: BoxFit.fill,
             alignment: Alignment.topCenter,
             child: Card(
-                color: Colors.black45,
+                color: const Color(0xf01f2420),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
                 ),
-                elevation: 30,
+                elevation: 0,
                 shadowColor: Colors.black,
                 child: SizedBox(
                   width: 350,
                   height: 200,
-                  child: _dataMap.isEmpty
-                      ? const Center(
-                          child: Text(
+                  child:
+                      // TransactionDB.instance.pieMapNotifier.value == null ||
+                      //         TransactionDB.instance.pieMapNotifier.value.isEmpty
+                      //     ? const Center(
+                      //         child: Text(
+                      //         'Set Range To See Pie Chart',
+                      //         style: TextStyle(color: Colors.grey),
+                      //       ))
+                      //     :
+                      ValueListenableBuilder(
+                    valueListenable: TransactionDB.instance.mylistNotifier,
+                    builder:
+                        (BuildContext ctx, List<Customer> newMap, Widget? _) {
+                      if (newMap == null || newMap.isEmpty) {
+                        return const Center(
+                            child: Text(
                           'Set Range To See Pie Chart',
                           style: TextStyle(color: Colors.grey),
-                        ))
-                      : PieChart(
-                          //emptyColor: Colors.white,
-                          dataMap: _dataMap,
-                          animationDuration: Duration(milliseconds: 800),
-                          chartLegendSpacing: 35,
-                          chartRadius: MediaQuery.of(context).size.width / 3.2,
-                          //colorList: colorList,
-                          // initialAngleInDegree: 0,
-                          chartType: ChartType.ring,
-                          ringStrokeWidth: 35,
-                          centerText: "Transaction",
-                          centerTextStyle: TextStyle(color: Colors.white),
-                          legendOptions: const LegendOptions(
-                            showLegendsInRow: false,
-                            legendPosition: LegendPosition.right,
-                            showLegends: true,
-                            legendShape: BoxShape.circle,
-                            legendTextStyle: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
-                          chartValuesOptions: ChartValuesOptions(
-                              showChartValueBackground: false,
-                              showChartValues: true,
-                              showChartValuesInPercentage: true,
-                              showChartValuesOutside: true,
-                              decimalPlaces: 1,
-                              chartValueStyle: TextStyle(color: Colors.black)),
-                          // gradientList: ---To add gradient colors---
-                          // emptyColorGradient: ---Empty Color gradient---
-                        ),
+                        ));
+                      }
+                      return SfCircularChart(
+                        legend: Legend(
+                            isVisible: true,
+                            overflowMode: LegendItemOverflowMode.wrap,
+                            textStyle: TextStyle(color: Colors.white)),
+                        tooltipBehavior: _tooltipBehavior,
+                        
+                        series: <CircularSeries>[
+                          PieSeries<Customer, String>(
+                            dataSource: newMap,
+                            xValueMapper: (Customer data, _) => data.typeName,
+                            yValueMapper: (Customer data, _) => data.amount,
+                            dataLabelSettings:
+                                DataLabelSettings(isVisible: true),
+                            enableTooltip: true,
+                          )
+                        ],
+                      );
+                    },
+                  ),
                 )),
           ),
         ),
+        const SizedBox(
+          height: 10,
+        ),
         Expanded(
             child: ValueListenableBuilder(
-                valueListenable: TransactionDB.instance.transactionListNotifier,
+                valueListenable:
+                    TransactionDB.instance.filteredTransactionListNotifier,
                 builder: (BuildContext ctx, List<TransactionModel> newList,
                     Widget? _) {
                   return ListView.separated(
                       controller: scrollController,
-                      padding: const EdgeInsets.only(
-                          bottom: 20, left: 20, right: 20),
+                      padding: const EdgeInsets.only(left: 20, right: 20),
                       itemBuilder: (ctx, index) {
                         final _value = newList[index];
                         return Card(
-                          shadowColor: _value.type == CategoryType.expense
-                              ? Colors.red
-                              : Colors.lightGreenAccent.shade700,
+                          // shadowColor: _value.type == CategoryType.expense
+                          //     ? Colors.red
+                          //     : Colors.lightGreenAccent.shade700,
                           shape: RoundedRectangleBorder(
                             // side: BorderSide(
                             //     width: 2,
@@ -549,19 +447,22 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           // margin: EdgeInsets.only(left: 10, right: 10),
-                          elevation: 20,
+                          elevation: 1,
                           child: Slidable(
                             //closeOnScroll: true,
                             startActionPane: ActionPane(
-                              motion: ScrollMotion(),
+                              motion: const ScrollMotion(),
                               children: [
                                 SlidableAction(
                                   spacing: 10,
                                   onPressed: (ctx) {
                                     // print('slidable delete');
                                     // print(_value.id);
-                                    TransactionDB.instance
-                                        .deleteTransaction(_value.id!);
+                                    setState(() {
+                                      TransactionDB.instance
+                                          .deleteTransaction(_value.id!);
+                                      TransactionDB.instance.refresh();
+                                    });
                                   },
                                   icon: Icons.delete,
                                   label: 'Delete',
@@ -580,11 +481,12 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                                     child: Text(
                                       parseDate(_value.date),
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.cyan),
+                                      style:
+                                          const TextStyle(color: Colors.cyan),
                                     ),
                                   ),
                                   title: Text(
-                                    'RS ${_value.amount}',
+                                    '₹ ${_value.amount}',
                                     style: TextStyle(
                                       color: _value.type == CategoryType.expense
                                           ? Colors.red
@@ -609,40 +511,13 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                       },
                       separatorBuilder: (ctx, index) {
                         return const SizedBox(
-                          height: 10,
+                          height: 5,
                         );
                       },
                       itemCount: newList.length);
                 })),
       ],
     );
-  }
-
-  Future pickDateRange(BuildContext context) async {
-    final initialDateRange = DateTimeRange(
-      start: DateTime.now(),
-      end: DateTime.now().add(Duration(hours: 24 * 3)),
-    );
-    final newDateRange = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(DateTime.now().year - 5),
-      lastDate: DateTime(DateTime.now().year + 5),
-      initialDateRange: dateRange ?? initialDateRange,
-    );
-
-    if (newDateRange == null) return;
-    //print(newDateRange.start);
-
-    setState(() {
-      dateRange = newDateRange;
-      _selectedStartDate = dateRange == null
-          ? 'From'
-          : DateFormat('dd/MM/yyyy').format(dateRange!.start);
-      _selectedEndDate = dateRange == null
-          ? 'Until'
-          : DateFormat('dd/MM/yyyy').format(dateRange!.end);
-    });
-    //print(dateRange);
   }
 
   String parseDate(DateTime date) {

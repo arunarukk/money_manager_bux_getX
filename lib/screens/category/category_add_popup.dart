@@ -74,7 +74,7 @@ class AddCategory extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        title: Text(
+        title: const Text(
           'Add Category',
           style: TextStyle(color: Colors.black),
         ),
@@ -88,8 +88,8 @@ class AddCategory extends StatelessWidget {
           // crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              height: 200,
-              child: Image.asset('assets/image/expense.png'),
+              height: 198,
+              child: Image.asset('assets/image/expense.jpg'),
             ),
             Column(
               children: [
@@ -105,13 +105,6 @@ class AddCategory extends StatelessWidget {
                       focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.cyan, width: 2),
                       ),
-                      // enabledBorder: UnderlineInputBorder(
-                      //   borderRadius: BorderRadius.circular(25.0),
-                      //   borderSide: BorderSide(
-                      //     color: Colors.red,
-                      //     width: 2.0,
-                      //   ),
-                      // ),
                     ),
                   ),
                 ),
@@ -137,7 +130,7 @@ class AddCategory extends StatelessWidget {
                     style: ElevatedButton.styleFrom(primary: Colors.cyan),
                     onPressed: () {
                       final _name = _nameEditingController.text;
-                      print(_name);
+
                       if (_name.isEmpty) {
                         return;
                       }
@@ -152,7 +145,7 @@ class AddCategory extends StatelessWidget {
                       // ignore: prefer_const_constructors
                       final snackBar = SnackBar(
                         duration: const Duration(seconds: 3),
-                        content: const Text('Category Added SuccesFully!'),
+                        content: const Text('Added SuccesFully!'),
                         backgroundColor: Colors.green,
                       );
                       ScaffoldMessenger.of(context).showSnackBar(snackBar);

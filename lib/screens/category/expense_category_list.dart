@@ -15,12 +15,12 @@ class ExpenseCategoryList extends StatelessWidget {
           itemBuilder: (ctx, index) {
             final category = newList[index];
             return Card(
-              shadowColor: Colors.red,
+              //shadowColor: Colors.red,
               //borderOnForeground: true,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
               ),
-              elevation: 30,
+              elevation: 1,
               child: SizedBox(
                 height: 80,
                 child: Center(
@@ -42,7 +42,7 @@ class ExpenseCategoryList extends StatelessWidget {
           },
           separatorBuilder: (ctx, index) {
             return const SizedBox(
-              height: 10,
+              height: 5,
             );
           },
           itemCount: newList.length,
