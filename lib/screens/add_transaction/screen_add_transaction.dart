@@ -17,6 +17,8 @@ class ScreenAddTransaction extends StatefulWidget {
 }
 
 class _ScreenAddTransactionState extends State<ScreenAddTransaction> {
+  final _formKey = GlobalKey<FormState>();
+
   DateTime? _selectedDate;
   CategoryType? _selectedCategorytype;
   CategoryModel? _selectedCategoryModel;
@@ -48,137 +50,154 @@ class _ScreenAddTransactionState extends State<ScreenAddTransaction> {
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(30.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextFormField(
-                  controller: _purposeTextEditingController,
-                  keyboardType: TextInputType.text,
-                  decoration: const InputDecoration(
-                    labelText: 'Purpose',
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.cyan, width: 2),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                TextFormField(
-                  controller: _amountTextEditingController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Amount',
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.cyan, width: 2),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                TextButton.icon(
-                  onPressed: () async {
-                    final _selectedDateTemp = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate:
-                          DateTime.now().subtract(const Duration(days: 30)),
-                      lastDate: DateTime.now(),
-                    );
-                    if (_selectedDateTemp == null) {
-                      return;
-                    } else {
-                      print(_selectedDateTemp.toString());
-                      setState(() {
-                        _selectedDate = _selectedDateTemp;
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(_selectedDate == null
-                          ? 'Select Date'
-                          : DateFormat('dd/MM/yyyy').format(_selectedDate!)
-                      // _selectedDate.toString(),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextFormField(
+                    controller: _purposeTextEditingController,
+                    keyboardType: TextInputType.text,
+                    decoration: const InputDecoration(
+                      labelText: 'Purpose',
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.cyan, width: 2),
                       ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Row(
-                      children: [
-                        Radio(
-                          value: CategoryType.income,
-                          groupValue: _selectedCategorytype,
-                          onChanged: (newValue) {
-                            setState(() {
-                              _selectedCategorytype = CategoryType.income;
-                              _categoryID = null;
-                            });
-                          },
-                          activeColor: Colors.cyan,
-                        ),
-                        Text('Income'),
-                      ],
                     ),
-                    Row(
-                      children: [
-                        Radio(
-                          value: CategoryType.expense,
-                          groupValue: _selectedCategorytype,
-                          onChanged: (newValue) {
-                            setState(() {
-                              _selectedCategorytype = CategoryType.expense;
-                              _categoryID = null;
-                            });
-                          },
-                          activeColor: Colors.cyan,
-                        ),
-                        Text('Expense'),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                DropdownButton<String>(
-                    hint: Text('Select Category'),
-                    value: _categoryID,
-                    items: (_selectedCategorytype == CategoryType.income
-                            ? CategoryDB().incomeCategoryListListener
-                            : CategoryDB().expenseCategoryListListener)
-                        .value
-                        .map((e) {
-                      return DropdownMenuItem(
-                        value: e.id,
-                        child: Text(e.name),
-                        onTap: () {
-                          _selectedCategoryModel = e;
-                        },
-                      );
-                    }).toList(),
-                    onChanged: (selectedValue) {
-                      setState(() {
-                        _categoryID = selectedValue;
-                      });
-                    }),
-                const SizedBox(
-                  height: 20,
-                ),
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(primary: Colors.cyan),
-                    onPressed: () {
-                      addTransaction();
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter Purpose';
+                      }
+                      return null;
                     },
-                    child: Text('Submit')),
-                const SizedBox(
-                  height: 20,
-                ),
-              ],
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  TextFormField(
+                    controller: _amountTextEditingController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Amount',
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.cyan, width: 2),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a Valid Amount';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  TextButton.icon(
+                    onPressed: () async {
+                      final _selectedDateTemp = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 30)),
+                        lastDate: DateTime.now(),
+                      );
+                      if (_selectedDateTemp == null) {
+                        return;
+                      } else {
+                        print(_selectedDateTemp.toString());
+                        setState(() {
+                          _selectedDate = _selectedDateTemp;
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.calendar_today),
+                    label: Text(_selectedDate == null
+                            ? 'Select Date'
+                            : DateFormat('dd/MM/yyyy').format(_selectedDate!)
+                        // _selectedDate.toString(),
+                        ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Row(
+                        children: [
+                          Radio(
+                            value: CategoryType.income,
+                            groupValue: _selectedCategorytype,
+                            onChanged: (newValue) {
+                              setState(() {
+                                _selectedCategorytype = CategoryType.income;
+                                _categoryID = null;
+                              });
+                            },
+                            activeColor: Colors.cyan,
+                          ),
+                          Text('Income'),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Radio(
+                            value: CategoryType.expense,
+                            groupValue: _selectedCategorytype,
+                            onChanged: (newValue) {
+                              setState(() {
+                                _selectedCategorytype = CategoryType.expense;
+                                _categoryID = null;
+                              });
+                            },
+                            activeColor: Colors.cyan,
+                          ),
+                          Text('Expense'),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  DropdownButton<String>(
+                      hint: Text('Select Category'),
+                      value: _categoryID,
+                      items: (_selectedCategorytype == CategoryType.income
+                              ? CategoryDB().incomeCategoryListListener
+                              : CategoryDB().expenseCategoryListListener)
+                          .value
+                          .map((e) {
+                        return DropdownMenuItem(
+                          value: e.id,
+                          child: Text(e.name),
+                          onTap: () {
+                            _selectedCategoryModel = e;
+                          },
+                        );
+                      }).toList(),
+                      onChanged: (selectedValue) {
+                        setState(() {
+                          _categoryID = selectedValue;
+                        });
+                      }),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  ElevatedButton(
+                      style: ElevatedButton.styleFrom(primary: Colors.cyan),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          addTransaction();
+                        }
+                      },
+                      child: Text('Submit')),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -223,7 +242,7 @@ class _ScreenAddTransactionState extends State<ScreenAddTransaction> {
 
     final snackBar = SnackBar(
       duration: Duration(seconds: 3),
-      content: Text('Category Added SuccesFully!'),
+      content: Text('Transaction Added SuccesFully!'),
       backgroundColor: Colors.green,
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);

@@ -24,7 +24,7 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
 
   bool closeTopContainer = false;
   // DateTimeRange? dateRange;
-
+  bool flag = false;
   late TooltipBehavior _tooltipBehavior;
 
   String? _selectedStartDate;
@@ -168,9 +168,6 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
   Widget build(BuildContext context) {
     TransactionDB.instance.refresh();
     CategoryDB.instance.refreshUI();
-    TransactionDB.instance.pieData();
-    // pieData();
-    // getTotalAmount();
     final Size size = MediaQuery.of(context).size;
     final double chartHeight = size.height * 0.27;
     return Column(
@@ -368,7 +365,7 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
             fit: BoxFit.fill,
             alignment: Alignment.topCenter,
             child: Card(
-                color: const Color(0xf01f2420),
+                color: Color(0xf01f2420),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
                 ),
@@ -391,10 +388,19 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                     builder:
                         (BuildContext ctx, List<Customer> newMap, Widget? _) {
                       if (newMap == null || newMap.isEmpty) {
-                        return const Center(
-                            child: Text(
-                          'Set Range To See Pie Chart',
-                          style: TextStyle(color: Colors.grey),
+                        return Center(
+                            child: Column(
+                          children: [
+                            Image.asset(
+                              'assets/image/piechart.png',
+                              height: 160,
+                            ),
+                            Text(
+                              'No transactions yet',
+                              style: TextStyle(
+                                  color: Colors.blueGrey, fontSize: 15),
+                            ),
+                          ],
                         ));
                       }
                       return SfCircularChart(
@@ -403,14 +409,21 @@ class _ScreenTransactionState extends State<ScreenTransaction> {
                             overflowMode: LegendItemOverflowMode.wrap,
                             textStyle: TextStyle(color: Colors.white)),
                         tooltipBehavior: _tooltipBehavior,
-                        
                         series: <CircularSeries>[
                           PieSeries<Customer, String>(
                             dataSource: newMap,
                             xValueMapper: (Customer data, _) => data.typeName,
                             yValueMapper: (Customer data, _) => data.amount,
-                            dataLabelSettings:
-                                DataLabelSettings(isVisible: true),
+                            dataLabelSettings: DataLabelSettings(
+                                isVisible: true,
+                                textStyle: TextStyle(
+                                  color: Colors.white,
+                                ),
+                                labelIntersectAction:
+                                    LabelIntersectAction.shift,
+                                labelPosition: ChartDataLabelPosition.outside,
+                                connectorLineSettings: ConnectorLineSettings(
+                                    type: ConnectorType.curve, length: '15%')),
                             enableTooltip: true,
                           )
                         ],

@@ -67,6 +67,8 @@ ValueNotifier<CategoryType> selectedCategoryNotifier =
 
 class AddCategory extends StatelessWidget {
   AddCategory({Key? key}) : super(key: key);
+
+  final _formKey = GlobalKey<FormState>();
   final _nameEditingController = TextEditingController();
   @override
   Widget build(BuildContext context) {
@@ -83,79 +85,89 @@ class AddCategory extends StatelessWidget {
       body: SafeArea(
           child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          // crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 198,
-              child: Image.asset('assets/image/expense.jpg'),
-            ),
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _nameEditingController,
-                    decoration: const InputDecoration(
-                      labelText: 'Category Name',
-                      //labelStyle: TextStyle(color: Colors.black),
-                      //hoverColor: Colors.black,
-                      // border: UnderlineInputBorder(),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.cyan, width: 2),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            // crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 198,
+                child: Image.asset('assets/image/expense.jpg'),
+              ),
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextFormField(
+                      controller: _nameEditingController,
+                      decoration: const InputDecoration(
+                        labelText: 'Category Name',
+                        //labelStyle: TextStyle(color: Colors.black),
+                        //hoverColor: Colors.black,
+                        // border: UnderlineInputBorder(),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.cyan, width: 2),
+                        ),
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter Category Name';
+                        }
+                        return null;
+                      },
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      RadioButton(
-                        title: 'Income',
-                        type: CategoryType.income,
-                      ),
-                      RadioButton(
-                        title: 'Expense',
-                        type: CategoryType.expense,
-                      )
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        RadioButton(
+                          title: 'Income',
+                          type: CategoryType.income,
+                        ),
+                        RadioButton(
+                          title: 'Expense',
+                          type: CategoryType.expense,
+                        )
+                      ],
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 80, right: 80),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(primary: Colors.cyan),
-                    onPressed: () {
-                      final _name = _nameEditingController.text;
+                  Padding(
+                    padding: const EdgeInsets.only(left: 80, right: 80),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(primary: Colors.cyan),
+                      onPressed: () {
+                        final _name = _nameEditingController.text;
 
-                      if (_name.isEmpty) {
-                        return;
-                      }
-                      final _type = selectedCategoryNotifier.value;
-                      final _category = CategoryModel(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
-                          name: _name,
-                          type: _type);
-                      CategoryDB.instance.insertCategory(_category);
-                      print(_category.toString());
-                      Navigator.of(context).pop();
-                      // ignore: prefer_const_constructors
-                      final snackBar = SnackBar(
-                        duration: const Duration(seconds: 3),
-                        content: const Text('Added SuccesFully!'),
-                        backgroundColor: Colors.green,
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    },
-                    child: const Text('Add'),
+                        if (_formKey.currentState!.validate()) {
+                          final _type = selectedCategoryNotifier.value;
+                          final _category = CategoryModel(
+                              id: DateTime.now()
+                                  .millisecondsSinceEpoch
+                                  .toString(),
+                              name: _name,
+                              type: _type);
+                          CategoryDB.instance.insertCategory(_category);
+                          print(_category.toString());
+                          Navigator.of(context).pop();
+                          // ignore: prefer_const_constructors
+                          final snackBar = SnackBar(
+                            duration: const Duration(seconds: 3),
+                            content: const Text('Category Added SuccesFully!'),
+                            backgroundColor: Colors.green,
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        }
+                      },
+                      child: const Text('Add'),
+                    ),
                   ),
-                ),
-              ],
-            )
-          ],
+                ],
+              )
+            ],
+          ),
         ),
       )),
     );

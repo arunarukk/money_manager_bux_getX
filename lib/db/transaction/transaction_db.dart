@@ -55,15 +55,19 @@ class TransactionDB implements TransactionDbFunctions {
 
   Future<void> refresh() async {
     List<TransactionModel> _list = [];
+    if (wafiend == null) {
+      _list = await getAllTransactions();
+    } else {
+      _list = await filterAllTransaction(wafistart, wafiend);
+    }
 
-    _list = await filterAllTransaction(wafistart, wafiend);
     _list.sort((first, second) => second.date.compareTo(first.date));
     filteredTransactionListNotifier.value.clear();
     filteredTransactionListNotifier.value.addAll(_list);
     filteredTransactionListNotifier.notifyListeners();
 
     getTotalAmount();
-    pieData();
+    sfPieChart();
   }
 
   @override
@@ -122,8 +126,13 @@ class TransactionDB implements TransactionDbFunctions {
 
   Future getTotalAmount() async {
     // List<TransactionModel> entireData = await getAllTransactions();
-    List<TransactionModel> entireData =
-        await filterAllTransaction(wafistart, wafiend);
+    List<TransactionModel> entireData = [];
+    if (wafiend == null) {
+      entireData = await getAllTransactions();
+    } else {
+      entireData = await filterAllTransaction(wafistart, wafiend);
+    }
+    // entireData = await filterAllTransaction(wafistart, wafiend);
     double _income = 0;
     double _expense = 0;
     List<double> totalAmount = [];
@@ -174,8 +183,12 @@ class TransactionDB implements TransactionDbFunctions {
   }
 
   sfPieChart() async {
-    List<TransactionModel> entireData =
-        await filterAllTransaction(wafistart, wafiend);
+    List<TransactionModel> entireData = [];
+    if (wafiend == null) {
+      entireData = await getAllTransactions();
+    } else {
+      entireData = await filterAllTransaction(wafistart, wafiend);
+    }
 
     bool flag = true;
     List<Customer> mylist = [];

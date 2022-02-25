@@ -92,9 +92,16 @@ class _ScreenHomeState extends State<ScreenHome> {
                 left: 10,
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const Text(
+                    'Hello..',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        fontStyle: FontStyle.italic),
+                  ),
                   TextButton.icon(
                     onPressed: () async {
                       await pickDateRange(context);
