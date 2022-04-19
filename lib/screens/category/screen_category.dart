@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:money_manager/db/category/category_db.dart';
 import 'package:money_manager/screens/category/expense_category_list.dart';
 import 'package:money_manager/screens/category/income_category_list.dart';
@@ -14,16 +15,16 @@ class _ScreenCategoryState extends State<ScreenCategory>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  final categoryControl = Get.put(categoryController());
   @override
   void initState() {
-    _tabController = TabController(length: 2, vsync: this);
-    CategoryDB().refreshUI();
-
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    _tabController = TabController(length: 2, vsync: this);
+    categoryControl.refreshUI();
     return Column(
       children: [
         TabBar(

@@ -1,59 +1,39 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:money_manager/models/category/category_model.dart';
 import 'package:money_manager/models/transaction/transaction_model.dart';
-import 'package:money_manager/screens/transactions/screen_transaction.dart';
 
 const TRANSACTION_DB_NAME = 'transaction-db';
 
-abstract class TransactionDbFunctions {
-  Future<void> addTransaction(TransactionModel obj);
-  Future<List<TransactionModel>> getAllTransactions();
-  Future<void> deleteTransaction(String id);
-}
+class transactionController extends GetxController {
+  List<TransactionModel> transactionList = <TransactionModel>[].obs;
+  List<TransactionModel> filteredTransactionList = <TransactionModel>[].obs;
 
-class TransactionDB implements TransactionDbFunctions {
-  TransactionDB._internal();
+  // List<double> totalAllTransactionList = <double>[].obs;
 
-  static TransactionDB instance = TransactionDB._internal();
+  List<double> totalTransactionList = <double>[].obs;
+  //double expenseTransaction = 0.0.obs as double;
 
-  factory TransactionDB() {
-    return instance;
-  }
+  List<Customer> newListNotifier = <Customer>[].obs;
 
-  ValueNotifier<List<TransactionModel>> transactionListNotifier =
-      ValueNotifier([]);
-  ValueNotifier<List<TransactionModel>> filteredTransactionListNotifier =
-      ValueNotifier([]);
+  List<Customer> mylistNotifier = <Customer>[].obs;
 
-  ValueNotifier<List<double>> totalAllTransactionListNotifier =
-      ValueNotifier([]);
+  Map<String, double> pieMapNotifier = <String, double>{}.obs;
 
-  ValueNotifier<double> incomeTransactionListNotifier =
-      ValueNotifier<double>(0);
-  ValueNotifier<double> expenseTransactionListNotifier =
-      ValueNotifier<double>(0);
-
-  ValueNotifier<List<Customer>> newListNotifier = ValueNotifier([]);
-
-  ValueNotifier<List<Customer>> mylistNotifier = ValueNotifier([]);
-
-  ValueNotifier<Map<String, double>> pieMapNotifier = ValueNotifier({});
-  List<TransactionModel> _refList = [];
+  //List<TransactionModel> _refList = [];
   DateTime? start;
   DateTime? end;
 
   DateTime? wafistart;
   DateTime? wafiend;
 
-  @override
   Future<void> addTransaction(TransactionModel obj) async {
     final _db = await Hive.openBox<TransactionModel>(TRANSACTION_DB_NAME);
     await _db.put(obj.id, obj);
   }
 
-  Future<void> refresh() async {
+  Future<void> refreshList() async {
     List<TransactionModel> _list = [];
     if (wafiend == null) {
       _list = await getAllTransactions();
@@ -62,27 +42,25 @@ class TransactionDB implements TransactionDbFunctions {
     }
 
     _list.sort((first, second) => second.date.compareTo(first.date));
-    filteredTransactionListNotifier.value.clear();
-    filteredTransactionListNotifier.value.addAll(_list);
-    filteredTransactionListNotifier.notifyListeners();
+    filteredTransactionList.clear();
+    filteredTransactionList.addAll(_list);
+    update();
 
     getTotalAmount();
     sfPieChart();
   }
 
-  @override
   Future<List<TransactionModel>> getAllTransactions() async {
     final _db = await Hive.openBox<TransactionModel>(TRANSACTION_DB_NAME);
 
     return _db.values.toList();
   }
 
-  @override
   Future<void> deleteTransaction(String id) async {
     final _db = await Hive.openBox<TransactionModel>(TRANSACTION_DB_NAME);
     await _db.delete(id);
 
-    refresh();
+    refreshList();
   }
 
   Future<List<TransactionModel>> filterAllTransaction(
@@ -105,24 +83,8 @@ class TransactionDB implements TransactionDbFunctions {
       }
     }
 
-    //transactionListNotifier.notifyListeners();
-
-    // filteredTransactionListNotifier.value.clear();
-    // filteredTransactionListNotifier.value.addAll(_newList);
-    // filteredTransactionListNotifier.notifyListeners();
-    //filteredListReturn();
-
-    // print('filreturn${_newList.toList()}');
     return _newList;
   }
-
-  // filteredListReturn() async {
-  //   if (_newList == null) {
-  //     return;
-  //   } else {
-  //     return _newList;
-  //   }
-  // }
 
   Future getTotalAmount() async {
     // List<TransactionModel> entireData = await getAllTransactions();
@@ -139,47 +101,28 @@ class TransactionDB implements TransactionDbFunctions {
     for (TransactionModel data in entireData) {
       if (data.type == CategoryType.income) {
         _income += data.amount;
-      } else {
+      } else if (data.type == CategoryType.expense) {
         _expense += data.amount;
       }
       // print('get total');
     }
+
     totalAmount.add(_income);
     totalAmount.add(_expense);
-    //print(totalAmount);
-    //totalAllTransactionListNotifier.value.clear();
-    incomeTransactionListNotifier.value = totalAmount.first;
-    expenseTransactionListNotifier.value = totalAmount.last;
-    //totalAllTransactionListNotifier.value.addAll(totalAmount);
+    totalTransactionList.clear();
+    totalTransactionList.add(_income);
+    totalTransactionList.add(_expense);
 
-    //incomeTransactionListNotifier.notifyListeners();
-    //expenseTransactionListNotifier.notifyListeners();
-  }
-
-  pieData() async {
-    List<TransactionModel> data =
-        await filterAllTransaction(wafistart, wafiend);
-    Map<String, double> result = Map.fromIterable(data,
-        key: (k) => k.category.name, value: (v) => v.amount);
-
-    if (result == null || result.isEmpty) {
-      result = {};
-    }
-    List<Customer> list = [];
-    result.forEach((k, v) => list.add(Customer(k, v)));
-    // print(list);
-
-    // pieMapNotifier.value.clear();
-    pieMapNotifier.value = result;
-    newListNotifier.value = list;
-    //pieMapNotifier.notifyListeners();
-    //print('pie${pieMapNotifier}');
+    update();
+    print(totalTransactionList);
+    //incomeTransaction = totalAmount.first;
+    // expenseTransaction = totalAmount.last;
   }
 
   wafi(DateTime start, DateTime end) {
     wafistart = start;
     wafiend = end;
-    refresh();
+    refreshList();
   }
 
   sfPieChart() async {
@@ -205,8 +148,22 @@ class TransactionDB implements TransactionDbFunctions {
         mylist.add(Customer(entireData[i].category.name, entireData[i].amount));
       }
     }
-    mylistNotifier.value = mylist;
-    print('pie cus ${mylist.toList()}');
+    mylistNotifier.clear();
+    mylistNotifier.addAll(mylist);
+    update();
+    //print('pie cus ${mylist.toList()}');
+  }
+
+  bool closeTopContainer = false;
+  bool openTopContainer = false;
+  ScrollController scrollController = ScrollController();
+  animatedContainer() {
+    scrollController.addListener(() {
+      closeTopContainer = scrollController.offset > 50;
+      // openTopContainer = scrollController.offset < 50;
+      update();
+    });
+    update();
   }
 }
 

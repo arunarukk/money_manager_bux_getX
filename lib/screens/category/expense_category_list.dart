@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:money_manager/db/category/category_db.dart';
 import 'package:money_manager/models/category/category_model.dart';
 
 class ExpenseCategoryList extends StatelessWidget {
-  const ExpenseCategoryList({Key? key}) : super(key: key);
+  ExpenseCategoryList({Key? key}) : super(key: key);
+
+  final categoryControl = Get.put(categoryController());
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: CategoryDB().expenseCategoryListListener,
-      builder: (BuildContext ctx, List<CategoryModel> newList, Widget? _) {
-        return ListView.separated(
+    return Obx((() => ListView.separated(
           padding: const EdgeInsets.all(20),
           itemBuilder: (ctx, index) {
-            final category = newList[index];
+            final category = categoryControl.expenseCategoryList[index];
             return Card(
               //shadowColor: Colors.red,
               //borderOnForeground: true,
@@ -28,7 +28,7 @@ class ExpenseCategoryList extends StatelessWidget {
                     title: Text(category.name),
                     trailing: IconButton(
                       onPressed: () {
-                        CategoryDB.instance.deleteCategory(category.id);
+                        categoryControl.deleteCategory(category.id);
                       },
                       icon: Icon(
                         Icons.delete,
@@ -45,9 +45,7 @@ class ExpenseCategoryList extends StatelessWidget {
               height: 5,
             );
           },
-          itemCount: newList.length,
-        );
-      },
-    );
+          itemCount: categoryControl.expenseCategoryList.length,
+        )));
   }
 }

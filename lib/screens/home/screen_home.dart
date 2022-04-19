@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:money_manager/db/category/category_db.dart';
 import 'package:money_manager/db/transaction/transaction_db.dart';
@@ -12,27 +13,19 @@ import 'package:money_manager/screens/category/screen_category.dart';
 import 'package:money_manager/screens/home/widgets/bottom_navigation.dart';
 import 'package:money_manager/screens/transactions/screen_transaction.dart';
 
-class ScreenHome extends StatefulWidget {
+class ScreenHome extends StatelessWidget {
   ScreenHome({
     Key? key,
   }) : super(key: key);
 
-  // DateTime defaultDate = 0 as DateTime;
-  static ValueNotifier<int> selectedIndexNotifier = ValueNotifier(0);
-
-  @override
-  State<ScreenHome> createState() => _ScreenHomeState();
-}
-
-class _ScreenHomeState extends State<ScreenHome> {
-  //static ValueNotifier<DateTimeRange>? _selectedDate;
+  
   DateTimeRange? dateRange;
+  static ValueNotifier<int> selectedIndexNotifier = ValueNotifier(0);
 
   List<TransactionModel> _newList = [];
 
-  String? _selectedStartDate;
-
-  String? _selectedEndDate;
+  final transactionControl = Get.put(transactionController());
+  final homeStateControl = Get.put(homeStateController());
 
   Future pickDateRange(BuildContext context) async {
     final initialDateRange = DateTimeRange(
@@ -46,114 +39,101 @@ class _ScreenHomeState extends State<ScreenHome> {
       initialDateRange: dateRange ?? initialDateRange,
     );
 
-    if (newDateRange == null) return;
+    if (newDateRange == null) return;  
     dateRange = newDateRange;
-    setState(() {
-      _selectedStartDate = DateFormat('MMM-dd').format(dateRange!.start);
-      _selectedEndDate = DateFormat('MMM-dd').format(dateRange!.end);
-    });
+    homeStateControl.dateRange(dateRange);
+    // setState(() {});
 
     //print(newDateRange.start);
     //print(dateRange);
-    print(_selectedStartDate);
+    // print(_selectedStartDate);
     if (dateRange != null) {}
   }
 
-  final _pages = [
+  final List<Widget> _pages = [
     ScreenTransaction(),
     ScreenCategory(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    transactionControl.refreshList();
     return Scaffold(
       backgroundColor: Color(0xf0f2f2f2),
       appBar: AppBar(
         elevation: 1,
         backgroundColor: Color(0xf0f6f3ec),
-        title: const Padding(
-          padding: EdgeInsets.only(top: 10),
-          child: Text(
-            'Money Manager',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: Size(0, 25),
-          child: SizedBox(
-            height: 35,
-            child: Padding(
-              padding: const EdgeInsets.only(
-                right: 10,
-                left: 10,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
+        title: Padding(
+          padding: EdgeInsets.only(top: 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Hello..',
+                  Container(
+                    height: 28,
+                    child: Image.asset(
+                      'assets/icon/bux_vector.png',
+                    ),
+                  ),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  Text(
+                    'buX',
                     style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        fontStyle: FontStyle.italic),
-                  ),
-                  TextButton.icon(
-                    onPressed: () async {
-                      await pickDateRange(context);
-                      if (dateRange != null) {
-                        TransactionDB.instance
-                            .wafi(dateRange!.start, dateRange!.end);
-                        TransactionDB.instance.sfPieChart();
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.calendar_today,
-                      color: Colors.black,
-                      size: 15,
-                    ),
-                    label: Text(
-                      dateRange == null
-                          ? 'Set Range'
-                          : '$_selectedStartDate - $_selectedEndDate',
-                      style: TextStyle(color: Colors.black),
-                      // _selectedDate.toString(),
+                      color: Color.fromARGB(255, 77, 76, 76),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  // ElevatedButton.icon(
-                  //   onPressed: () {
-                  //     if (dateRange == null) {
-                  //       print('null');
-                  //       return;
-                  //     }
-                  //     TransactionDB.instance
-                  //         .wafi(dateRange!.start, dateRange!.end);
-                  //     // final _list = TransactionDB.instance
-                  //     //     .filterAllTransaction(
-                  //     //         dateRange!.start, dateRange!.end);
-                  //     //print(_list);
-                  //     TransactionDB.instance.refresh();
-                  //     print('search');
-                  //   },
-                  //   icon: Icon(
-                  //     Icons.search,
-                  //     color: Colors.black,
-                  //   ),
-                  //   label: Text(''),
-                  //   style: ElevatedButton.styleFrom(
-                  //       primary: Colors.transparent, elevation: 0),
-                  // ),
                 ],
               ),
-            ),
+              Container(
+                //color: Colors.amber,
+                height: 60,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 0, left: 10, top: 23),
+                  child: Row(
+                    //mainAxisAlignment: MainAxisAlignment.center,
+                    // crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () async {
+                          await pickDateRange(context);
+                          if (dateRange != null) {
+                            transactionControl.wafi(
+                                dateRange!.start, dateRange!.end);
+                            transactionControl.sfPieChart();
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.calendar_today,
+                          color: Colors.black,
+                          size: 12,
+                        ),
+                        label: GetBuilder<homeStateController>(
+                          init: homeStateController(),
+                          builder: (controll) {
+                            return Text(
+                              dateRange == null
+                                  ? 'Set Range'
+                                  : '${controll.selectedStartDate}  - ${controll.selectedEndDate}',
+                              style: TextStyle(color: Colors.black),
+                              // _selectedDate.toString(),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      bottomNavigationBar: MoneyManagerBottomNavigation(),
+      bottomNavigationBar: const MoneyManagerBottomNavigation(),
       body: SafeArea(
         child: ValueListenableBuilder(
           valueListenable: ScreenHome.selectedIndexNotifier,
@@ -206,5 +186,17 @@ class _ScreenHomeState extends State<ScreenHome> {
         //Icon(Icons.add,),
       ),
     );
+  }
+}
+
+class homeStateController extends GetxController {
+  String? selectedStartDate;
+
+  String? selectedEndDate;
+
+  dateRange(DateTimeRange? dateRange) {
+    selectedStartDate = DateFormat('MMM-dd').format(dateRange!.start);
+    selectedEndDate = DateFormat('MMM-dd').format(dateRange.end);
+    update();
   }
 }

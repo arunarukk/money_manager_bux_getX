@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:money_manager/models/category/category_model.dart';
 import 'package:money_manager/models/transaction/transaction_model.dart';
@@ -28,14 +29,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: Colors.black,
       ),
       home: ScreenHome(),
       routes: {
-        ScreenAddTransaction.routeName: (ctx) => const ScreenAddTransaction(),
+        ScreenAddTransaction.routeName: (ctx) => ScreenAddTransaction(),
       },
     );
   }

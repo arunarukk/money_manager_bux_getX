@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:money_manager/db/category/category_db.dart';
 import 'package:money_manager/db/transaction/transaction_db.dart';
@@ -8,31 +9,23 @@ import 'package:money_manager/models/category/category_model.dart';
 import 'package:money_manager/models/transaction/transaction_model.dart';
 import 'package:money_manager/screens/home/screen_home.dart';
 
-class ScreenAddTransaction extends StatefulWidget {
+class ScreenAddTransaction extends StatelessWidget {
   static const routeName = 'add-transaction';
-  const ScreenAddTransaction({Key? key}) : super(key: key);
+  ScreenAddTransaction({Key? key}) : super(key: key);
 
-  @override
-  State<ScreenAddTransaction> createState() => _ScreenAddTransactionState();
-}
-
-class _ScreenAddTransactionState extends State<ScreenAddTransaction> {
   final _formKey = GlobalKey<FormState>();
 
-  DateTime? _selectedDate;
-  CategoryType? _selectedCategorytype;
+  final categoryControl = Get.put(categoryController());
+  final transactionControl = Get.put(transactionController());
+
+  
   CategoryModel? _selectedCategoryModel;
 
-  String? _categoryID;
+  final stateControl = Get.put(stateController());
+
 
   final _purposeTextEditingController = TextEditingController();
   final _amountTextEditingController = TextEditingController();
-
-  @override
-  void initState() {
-    _selectedCategorytype = CategoryType.income;
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,94 +87,107 @@ class _ScreenAddTransactionState extends State<ScreenAddTransaction> {
                     height: 20,
                   ),
                   TextButton.icon(
-                    onPressed: () async {
-                      final _selectedDateTemp = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate:
-                            DateTime.now().subtract(const Duration(days: 30)),
-                        lastDate: DateTime.now(),
-                      );
-                      if (_selectedDateTemp == null) {
-                        return;
-                      } else {
-                        print(_selectedDateTemp.toString());
-                        setState(() {
-                          _selectedDate = _selectedDateTemp;
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.calendar_today),
-                    label: Text(_selectedDate == null
-                            ? 'Select Date'
-                            : DateFormat('dd/MM/yyyy').format(_selectedDate!)
-                        // _selectedDate.toString(),
-                        ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Row(
-                        children: [
-                          Radio(
-                            value: CategoryType.income,
-                            groupValue: _selectedCategorytype,
-                            onChanged: (newValue) {
-                              setState(() {
-                                _selectedCategorytype = CategoryType.income;
-                                _categoryID = null;
-                              });
-                            },
-                            activeColor: Colors.cyan,
-                          ),
-                          Text('Income'),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Radio(
-                            value: CategoryType.expense,
-                            groupValue: _selectedCategorytype,
-                            onChanged: (newValue) {
-                              setState(() {
-                                _selectedCategorytype = CategoryType.expense;
-                                _categoryID = null;
-                              });
-                            },
-                            activeColor: Colors.cyan,
-                          ),
-                          Text('Expense'),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  DropdownButton<String>(
-                      hint: Text('Select Category'),
-                      value: _categoryID,
-                      items: (_selectedCategorytype == CategoryType.income
-                              ? CategoryDB().incomeCategoryListListener
-                              : CategoryDB().expenseCategoryListListener)
-                          .value
-                          .map((e) {
-                        return DropdownMenuItem(
-                          value: e.id,
-                          child: Text(e.name),
-                          onTap: () {
-                            _selectedCategoryModel = e;
-                          },
+                      onPressed: () async {
+                        final selectedDateTemp = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate:
+                              DateTime.now().subtract(const Duration(days: 30)),
+                          lastDate: DateTime.now(),
                         );
-                      }).toList(),
-                      onChanged: (selectedValue) {
-                        setState(() {
-                          _categoryID = selectedValue;
-                        });
-                      }),
+                        stateControl.dateChange(selectedDateTemp!);
+                      },
+                      icon: const Icon(Icons.calendar_today),
+                      label: GetBuilder<stateController>(
+                        builder: (controller) {
+                          return Text(controller.myDate == null
+                                  ? 'Select Date'
+                                  : DateFormat('dd/MM/yyyy')
+                                      .format(controller.myDate!)
+                              // _selectedDate.toString(),
+                              );
+                        },
+                      )),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  GetBuilder<stateController>(
+                    init: stateController(),
+                    builder: (controller) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Row(
+                            children: [
+                              Radio(
+                                value: CategoryType.income,
+                                groupValue: controller.selectedCategorytype,
+                                onChanged: (newValue) {
+                                  stateControl
+                                      .categoryRadio(CategoryType.income);
+
+                                  controller.selectedCategorytype =
+                                      CategoryType.income;
+                                  controller.categoryID = null;
+                                },
+                                activeColor: Colors.cyan,
+                              ),
+                              Text('Income'),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Radio(
+                                value: CategoryType.expense,
+                                groupValue: controller.selectedCategorytype,
+                                onChanged: (newValue) {
+                                  stateControl
+                                      .categoryRadio(CategoryType.expense);
+                                  // setState(() {
+                                  controller.selectedCategorytype =
+                                      stateControl.selectedCategorytype;
+                                  controller.categoryID = null;
+                                  // });
+                                },
+                                activeColor: Colors.cyan,
+                              ),
+                              Text('Expense'),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  GetBuilder<stateController>(
+                    init: stateController(),
+                    builder: (controller) {
+                      return DropdownButton<String>(
+                          hint: Text('Select Category'),
+                          value: controller.categoryID,
+                          items: (controller.selectedCategorytype ==
+                                      CategoryType.income
+                                  ? categoryControl.incomeCategoryList
+                                  : categoryControl.expenseCategoryList)
+                              .map((e) {
+                            return DropdownMenuItem(
+                              value: e.id,
+                              child: Text(e.name),
+                              onTap: () {
+                                _selectedCategoryModel = e;
+                              },
+                            );
+                          }).toList(),
+                          onChanged: (selectedValue) {
+                            //setState(() {
+                            controller.categoryIDchange(selectedValue!);
+                            controller.categoryID = selectedValue;
+                            // });
+                          });
+                    },
+                  ),
                   const SizedBox(
                     height: 20,
                   ),
@@ -214,10 +220,10 @@ class _ScreenAddTransactionState extends State<ScreenAddTransaction> {
     if (_amountText.isEmpty) {
       return;
     }
-    if (_categoryID == null) {
+    if (stateControl.categoryID == null) {
       return;
     }
-    if (_selectedDate == null) {
+    if (stateControl.myDate == null) {
       return;
     }
     if (_selectedCategoryModel == null) {
@@ -230,21 +236,55 @@ class _ScreenAddTransactionState extends State<ScreenAddTransaction> {
     final _model = TransactionModel(
       purpose: _purposeText,
       amount: _parsedAmount,
-      date: _selectedDate!,
-      type: _selectedCategorytype!,
+      date: stateControl.myDate!,
+      type: stateControl.selectedCategorytype!,
       category: _selectedCategoryModel!,
     );
 
-    await TransactionDB.instance.addTransaction(_model);
+    await transactionControl.addTransaction(_model);
     // ScreenHome();
-    Navigator.of(context).pop();
-    TransactionDB.instance.refresh();
+    //Navigator.of(context).pop();
+    Get.back();
+    transactionControl.refreshList();
 
-    final snackBar = SnackBar(
-      duration: Duration(seconds: 3),
-      content: Text('Transaction Added SuccesFully!'),
-      backgroundColor: Colors.green,
+    // final snackBar = SnackBar(
+    //   duration: Duration(seconds: 3),
+    //   content: Text('Transaction Added SuccesFully!'),
+    //   backgroundColor: Colors.green,
+    // );
+    // ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    Get.snackbar(
+      "Hey",
+      "Transaction Added SuccesFully!",
+      backgroundColor: Color.fromARGB(255, 57, 133, 60),
     );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+}
+
+class stateController extends GetxController {
+  DateTime? myDate;
+  CategoryType? selectedCategorytype;
+  String? categoryID;
+
+  void dateChange(DateTime newDate) {
+    myDate = newDate;
+    update();
+  }
+
+  void categoryRadio(CategoryType? selectedType) {
+    selectedCategorytype = selectedType;
+    update();
+  }
+
+  void categoryIDchange(String categoryId) {
+    categoryID = categoryId;
+    update();
+  }
+
+  @override
+  void onInit() {
+    // TODO: implement onInit
+    super.onInit();
+    selectedCategorytype = CategoryType.income;
   }
 }

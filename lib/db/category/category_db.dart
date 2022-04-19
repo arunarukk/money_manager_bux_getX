@@ -1,28 +1,17 @@
 import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:money_manager/models/category/category_model.dart';
 
 const CATEGORY_DB_NAME = 'category-database';
 
-abstract class CategoryDbFunctions {
-  Future<List<CategoryModel>> getCategories();
-  Future<void> insertCategory(CategoryModel value);
-  Future<void> deleteCategory(String categoryID);
-}
+class categoryController extends GetxController{
 
-class CategoryDB implements CategoryDbFunctions {
-  CategoryDB._internal();
-
-  static CategoryDB instance = CategoryDB._internal();
-
-  factory CategoryDB() {
-    return instance;
-  }
-
-  ValueNotifier<List<CategoryModel>> incomeCategoryListListener =
-      ValueNotifier([]);
-  ValueNotifier<List<CategoryModel>> expenseCategoryListListener =
-      ValueNotifier([]);
+ List<CategoryModel> incomeCategoryList =
+     <CategoryModel>[].obs;
+  List<CategoryModel> expenseCategoryList =
+      <CategoryModel>[].obs;
 
   @override
   Future<void> insertCategory(CategoryModel value) async {
@@ -39,20 +28,20 @@ class CategoryDB implements CategoryDbFunctions {
 
   Future<void> refreshUI() async {
     final _allCategories = await getCategories();
-    incomeCategoryListListener.value.clear();
-    expenseCategoryListListener.value.clear();
+    incomeCategoryList.clear();
+    expenseCategoryList.clear();
     await Future.forEach(
       _allCategories,
       (CategoryModel category) {
         if (category.type == CategoryType.income) {
-          incomeCategoryListListener.value.add(category);
+          incomeCategoryList.add(category);
         } else {
-          expenseCategoryListListener.value.add(category);
+          expenseCategoryList.add(category);
         }
       },
     );
-    incomeCategoryListListener.notifyListeners();
-    expenseCategoryListListener.notifyListeners();
+    // incomeCategoryList.notifyListeners();
+    // expenseCategoryList.notifyListeners();
   }
 
   @override
